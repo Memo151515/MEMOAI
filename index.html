@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MEMO AI - Creative Suite</title>
+    <title>MEMO AI - Gemini Edition</title>
     <style>
         :root {
             --primary-red: #ff0000;
@@ -126,7 +126,6 @@
         .btn-mic { background: transparent; border: 2px solid var(--primary-red); color: var(--primary-red); }
         .btn-mic.recording { background: var(--primary-red); color: white; animation: pulse 1s infinite; }
         .btn-send { background: var(--primary-red); color: white; }
-        .btn:active { transform: scale(0.9); }
 
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); } 100% { box-shadow: 0 0 0 15px rgba(255, 0, 0, 0); } }
     </style>
@@ -141,18 +140,19 @@
 </header>
 
 <div id="chat-output">
-    <div class="message ai-message">Merhaba! Ben MEMO AI. Sana hem metin yazabilirim hem de hayalindeki resmi çizebilirim. Ne yapalım?</div>
+    <div class="message ai-message">Gemini bağlandı! Ben MEMO AI. Senin için yazabilir, düşünebilir ve resim çizebilirim.</div>
 </div>
 
 <div class="controls">
     <button id="micBtn" class="btn btn-mic">🎤</button>
-    <input type="text" id="userInput" placeholder="Mesaj yaz veya 'Kedi resmi çiz' de...">
+    <input type="text" id="userInput" placeholder="Bir şeyler yaz veya resim iste...">
     <button onclick="processChat()" class="btn btn-send">➤</button>
 </div>
 
 <script>
-    const API_KEY = 'sk-abcd1234abcd1234abcd1234abcd1234abcd1234'; 
-    let messages = [{ role: "system", content: "Senin adın MEMO AI. Resim çizme yeteneğine sahipsin. Kullanıcı resim istediğinde DALL-E kullanacağını belirt." }];
+    // ÖNEMLİ: Kendi anahtarını buraya koydun. 
+    const API_KEY = 'AIzaSyCsG1HBKlmutazTus7jeleApIVx4Huxltc'; 
+    let chatHistory = [];
 
     // --- SES TANIMA ---
     const micBtn = document.getElementById('micBtn');
@@ -175,7 +175,6 @@
         addMessage('user', text);
         inputField.value = '';
 
-        // Resim isteği mi kontrol et?
         const isImageRequest = /çiz|oluştur|yap|resim|fotoğraf/i.test(text);
 
         if (isImageRequest) {
@@ -185,45 +184,62 @@
         }
     }
 
-    // --- METİN ÜRETME (GPT) ---
+    // --- GEMINI METİN ÜRETME ---
     async function generateText(prompt) {
-        messages.push({ role: "user", content: prompt });
+        chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+        
         try {
-            const res = await fetch('https://api.openai.com/v1/chat/completions', {
+            // Gemini 1.5 Flash modeli en hızlısıdır
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+            
+            const res = await fetch(url, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}` },
-                body: JSON.stringify({ model: "gpt-3.5-turbo", messages: messages })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: chatHistory })
             });
+
             const data = await res.json();
-            const aiReply = data.choices[0].message.content;
+            const aiReply = data.candidates[0].content.parts[0].text;
+            
             addMessage('ai', aiReply);
-            messages.push({ role: "assistant", content: aiReply });
-        } catch (e) { addMessage('ai', "Hata: " + e.message); }
+            chatHistory.push({ role: "model", parts: [{ text: aiReply }] });
+        } catch (e) { 
+            addMessage('ai', "Hata: Gemini anahtarın veya bağlantınla ilgili bir sorun var."); 
+        }
     }
 
-    // --- RESİM ÜRETME (DALL-E) ---
+    // --- GEMINI RESİM ÜRETME (Imagen Altyapısı) ---
     async function generateImage(prompt) {
-        addMessage('ai', "Hemen hayal ediyorum ve çiziyorum, lütfen bekle...");
+        addMessage('ai', "Resim üzerinde çalışıyorum, biraz bekle...");
+        
         try {
-            const res = await fetch('https://api.openai.com/v1/images/generations', {
+            // Google'ın Imagen modelini çağırmak için gerekli endpoint
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-images:generateImages?key=${API_KEY}`;
+            
+            const res = await fetch(url, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}` },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     prompt: prompt,
-                    n: 1,
-                    size: "512x512"
+                    number_of_images: 1
                 })
             });
+
             const data = await res.json();
-            const imageUrl = data.data[0].url;
+            
+            // Not: Gemini Imagen bazen base64 döner, bazen URL. Bu yapı standarttır.
+            const base64Data = data.images[0].imageBytes;
+            const imageUrl = `data:image/png;base64,${base64Data}`;
             
             const output = document.getElementById('chat-output');
             const imgDiv = document.createElement('div');
             imgDiv.className = 'message ai-message';
-            imgDiv.innerHTML = `İşte çizdiğim resim: <br><img src="${imageUrl}" class="ai-image" onclick="window.open('${imageUrl}')">`;
+            imgDiv.innerHTML = `İşte hayalin: <br><img src="${imageUrl}" class="ai-image" onclick="window.open('${imageUrl}')">`;
             output.appendChild(imgDiv);
             output.scrollTop = output.scrollHeight;
-        } catch (e) { addMessage('ai', "Resim oluşturulurken bir hata oluştu."); }
+        } catch (e) { 
+            addMessage('ai', "Maalesef resim oluşturamadım. API anahtarının Imagen (resim) yetkisi olmayabilir."); 
+        }
     }
 
     function addMessage(sender, text) {
