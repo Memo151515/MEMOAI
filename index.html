@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MEMO AI - Ling 2.6 Flash</title>
+    <title>MEMO AI</title>
     <style>
         :root {
             --primary-red: #ff0000;
@@ -32,14 +32,14 @@
         }
 
         .logo-red {
-            width: 50px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
             fill: var(--primary-red);
-            filter: drop-shadow(0 0 12px var(--primary-red));
+            filter: drop-shadow(0 0 10px var(--primary-red));
         }
 
         h1 {
-            font-size: 1rem;
+            font-size: 0.9rem;
             margin: 5px 0 0;
             letter-spacing: 4px;
             color: var(--primary-red);
@@ -99,10 +99,7 @@
             background: #1e1e1e;
             color: white;
             outline: none;
-            transition: 0.3s;
         }
-
-        input#userInput:focus { border-color: var(--primary-red); }
 
         .btn {
             width: 50px;
@@ -132,28 +129,33 @@
     <h1>MEMO AI</h1>
 </header>
 
-<div id="chat-output">
-    <div class="message ai-message">OpenRouter bağlantısı kuruldu! Ling-2.6-Flash modeli aktif. Ben MEMO AI, sana nasıl yardımcı olabilirim?</div>
-</div>
+<div id="chat-output"></div>
 
 <div class="controls">
     <button id="micBtn" class="btn btn-mic">🎤</button>
-    <input type="text" id="userInput" placeholder="Ling modeline bir şeyler sor...">
+    <input type="text" id="userInput" placeholder="Mesajınızı yazın...">
     <button onclick="processChat()" class="btn btn-send">➤</button>
 </div>
 
 <script>
-    // YAPILANDIRMA
     const API_KEY = "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";
     const MODEL_NAME = "inclusionai/ling-2.6-flash:free";
     
-    let chatHistory = [
+    // Geçmişi yükle veya yeni başlat
+    let chatHistory = JSON.parse(localStorage.getItem('memo_ai_history')) || [
         { role: "system", content: "Senin adın MEMO AI. Çok hızlı, zeki ve yardımsever bir asistansın." }
     ];
 
-    // --- SES TANIMA ---
+    // Sayfa yüklendiğinde eski mesajları ekrana bas
+    window.onload = () => {
+        chatHistory.forEach(msg => {
+            if(msg.role !== 'system') addMessageToUI(msg.role === 'user' ? 'user' : 'ai', msg.content);
+        });
+    };
+
     const micBtn = document.getElementById('micBtn');
     const inputField = document.getElementById('userInput');
+    const outputArea = document.getElementById('chat-output');
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (SpeechRecognition) {
@@ -168,15 +170,15 @@
         recognition.onend = () => micBtn.classList.remove('recording');
     }
 
-    // --- OPENROUTER MOTORU ---
     async function processChat() {
         const text = inputField.value.trim();
         if (!text) return;
 
-        addMessage('user', text);
+        addMessageToUI('user', text);
         inputField.value = '';
 
         chatHistory.push({ role: "user", content: text });
+        saveHistory();
 
         try {
             const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -195,25 +197,28 @@
             
             if (data.choices && data.choices[0]) {
                 const aiReply = data.choices[0].message.content;
-                addMessage('ai', aiReply);
+                addMessageToUI('ai', aiReply);
                 chatHistory.push({ role: "assistant", content: aiReply });
+                saveHistory();
             } else {
-                throw new Error(data.error ? data.error.message : "Bilinmeyen bir hata oluştu.");
+                throw new Error("Yanıt alınamadı.");
             }
 
         } catch (e) {
-            addMessage('ai', "Hata oluştu: " + e.message);
-            console.error(e);
+            addMessageToUI('ai', "Bağlantı hatası: " + e.message);
         }
     }
 
-    function addMessage(sender, text) {
-        const output = document.getElementById('chat-output');
+    function addMessageToUI(sender, text) {
         const div = document.createElement('div');
         div.className = `message ${sender}-message`;
         div.innerText = text;
-        output.appendChild(div);
-        output.scrollTop = output.scrollHeight;
+        outputArea.appendChild(div);
+        outputArea.scrollTop = outputArea.scrollHeight;
+    }
+
+    function saveHistory() {
+        localStorage.setItem('memo_ai_history', JSON.stringify(chatHistory));
     }
 
     inputField.addEventListener("keypress", (e) => { if (e.key === "Enter") processChat(); });
