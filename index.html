@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MEMO AI - Gemini Edition</title>
+    <title>MEMO AI - Puter Power</title>
+    <script src="https://js.puter.com/v2/"></script>
     <style>
         :root {
             --primary-red: #ff0000;
@@ -140,19 +141,18 @@
 </header>
 
 <div id="chat-output">
-    <div class="message ai-message">Gemini bağlandı! Ben MEMO AI. Senin için yazabilir, düşünebilir ve resim çizebilirim.</div>
+    <div class="message ai-message">Puter ile OpenAI bağlandı! Ben MEMO AI. Anahtarsız, özgürce yazabiliriz.</div>
 </div>
 
 <div class="controls">
     <button id="micBtn" class="btn btn-mic">🎤</button>
-    <input type="text" id="userInput" placeholder="Bir şeyler yaz veya resim iste...">
+    <input type="text" id="userInput" placeholder="Mesaj yaz veya resim iste...">
     <button onclick="processChat()" class="btn btn-send">➤</button>
 </div>
 
 <script>
-    // ÖNEMLİ: Kendi anahtarını buraya koydun. 
-    const API_KEY = 'AIzaSyCsG1HBKlmutazTus7jeleApIVx4Huxltc'; 
-    let chatHistory = [];
+    // Artık API_KEY değişkenine ihtiyacımız yok, Puter otomatik hallediyor.
+    let messages = [{ role: "system", content: "Senin adın MEMO AI. Puter üzerinden OpenAI altyapısını kullanıyorsun." }];
 
     // --- SES TANIMA ---
     const micBtn = document.getElementById('micBtn');
@@ -184,61 +184,43 @@
         }
     }
 
-    // --- GEMINI METİN ÜRETME ---
+    // --- PUTER İLE METİN ÜRETME (OpenAI) ---
     async function generateText(prompt) {
-        chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-        
+        messages.push({ role: "user", content: prompt });
         try {
-            // Gemini 1.5 Flash modeli en hızlısıdır
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
-            
-            const res = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: chatHistory })
-            });
-
-            const data = await res.json();
-            const aiReply = data.candidates[0].content.parts[0].text;
+            // Puter.js üzerinden doğrudan GPT çağrısı
+            const response = await puter.ai.chat(messages);
+            const aiReply = response.message.content;
             
             addMessage('ai', aiReply);
-            chatHistory.push({ role: "model", parts: [{ text: aiReply }] });
+            messages.push({ role: "assistant", content: aiReply });
         } catch (e) { 
-            addMessage('ai', "Hata: Gemini anahtarın veya bağlantınla ilgili bir sorun var."); 
+            addMessage('ai', "Puter bağlantı hatası. Lütfen internetini kontrol et."); 
+            console.error(e);
         }
     }
 
-    // --- GEMINI RESİM ÜRETME (Imagen Altyapısı) ---
+    // --- PUTER İLE RESİM ÜRETME ---
     async function generateImage(prompt) {
-        addMessage('ai', "Resim üzerinde çalışıyorum, biraz bekle...");
-        
+        addMessage('ai', "Hemen çiziyorum, bir saniye...");
         try {
-            // Google'ın Imagen modelini çağırmak için gerekli endpoint
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-images:generateImages?key=${API_KEY}`;
-            
-            const res = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    prompt: prompt,
-                    number_of_images: 1
-                })
-            });
-
-            const data = await res.json();
-            
-            // Not: Gemini Imagen bazen base64 döner, bazen URL. Bu yapı standarttır.
-            const base64Data = data.images[0].imageBytes;
-            const imageUrl = `data:image/png;base64,${base64Data}`;
+            // Puter.js üzerinden resim oluşturma
+            const imgElement = await puter.ai.txt2img(prompt);
             
             const output = document.getElementById('chat-output');
             const imgDiv = document.createElement('div');
             imgDiv.className = 'message ai-message';
-            imgDiv.innerHTML = `İşte hayalin: <br><img src="${imageUrl}" class="ai-image" onclick="window.open('${imageUrl}')">`;
+            imgDiv.innerHTML = `İşte çizimim: <br>`;
+            
+            // Puter img elementini direkt döndürür, onu ekliyoruz
+            imgElement.className = "ai-image";
+            imgDiv.appendChild(imgElement);
+            
             output.appendChild(imgDiv);
             output.scrollTop = output.scrollHeight;
         } catch (e) { 
-            addMessage('ai', "Maalesef resim oluşturamadım. API anahtarının Imagen (resim) yetkisi olmayabilir."); 
+            addMessage('ai', "Maalesef şu an resim çizemiyorum."); 
+            console.error(e);
         }
     }
 
