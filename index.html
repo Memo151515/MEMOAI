@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEMO AI - Creative Suite</title>
+    <style>
+        :root {
+            --primary-red: #ff0000;
+            --dark-bg: #0a0a0a;
+            --chat-bg: #161616;
+            --text-color: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--dark-bg);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            padding: 15px;
+            text-align: center;
+            border-bottom: 2px solid var(--primary-red);
+            background: rgba(0,0,0,0.8);
+            z-index: 10;
+        }
+
+        .logo-red {
+            width: 50px;
+            height: 50px;
+            fill: var(--primary-red);
+            filter: drop-shadow(0 0 12px var(--primary-red));
+        }
+
+        h1 {
+            font-size: 1rem;
+            margin: 5px 0 0;
+            letter-spacing: 4px;
+            color: var(--primary-red);
+            text-transform: uppercase;
+        }
+
+        #chat-output {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background-image: radial-gradient(circle at center, #1a0000 0%, #0a0a0a 100%);
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 14px 20px;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .user-message {
+            align-self: flex-end;
+            background: #2c2c2c;
+            border-bottom-right-radius: 2px;
+        }
+
+        .ai-message {
+            align-self: flex-start;
+            background: var(--primary-red);
+            color: white;
+            border-bottom-left-radius: 2px;
+            box-shadow: 0 4px 15px rgba(255, 0, 0, 0.2);
+        }
+
+        .ai-image {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 10px;
+            margin-top: 10px;
+            border: 2px solid white;
+        }
+
+        .controls {
+            padding: 20px;
+            background: #111;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-top: 1px solid #222;
+        }
+
+        input#userInput {
+            flex: 1;
+            padding: 15px 20px;
+            border-radius: 30px;
+            border: 1px solid #333;
+            background: #1e1e1e;
+            color: white;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        input#userInput:focus { border-color: var(--primary-red); }
+
+        .btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+
+        .btn-mic { background: transparent; border: 2px solid var(--primary-red); color: var(--primary-red); }
+        .btn-mic.recording { background: var(--primary-red); color: white; animation: pulse 1s infinite; }
+        .btn-send { background: var(--primary-red); color: white; }
+        .btn:active { transform: scale(0.9); }
+
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); } 100% { box-shadow: 0 0 0 15px rgba(255, 0, 0, 0); } }
+    </style>
+</head>
+<body>
+
+<header>
+    <svg class="logo-red" viewBox="0 0 24 24">
+        <path d="M12,2L14.5,9.5L22,12L14.5,14.5L12,22L9.5,14.5L2,12L9.5,9.5L12,2Z" />
+    </svg>
+    <h1>MEMO AI</h1>
+</header>
+
+<div id="chat-output">
+    <div class="message ai-message">Merhaba! Ben MEMO AI. Sana hem metin yazabilirim hem de hayalindeki resmi çizebilirim. Ne yapalım?</div>
+</div>
+
+<div class="controls">
+    <button id="micBtn" class="btn btn-mic">🎤</button>
+    <input type="text" id="userInput" placeholder="Mesaj yaz veya 'Kedi resmi çiz' de...">
+    <button onclick="processChat()" class="btn btn-send">➤</button>
+</div>
+
+<script>
+    const API_KEY = 'sk-abcd1234abcd1234abcd1234abcd1234abcd1234'; 
+    let messages = [{ role: "system", content: "Senin adın MEMO AI. Resim çizme yeteneğine sahipsin. Kullanıcı resim istediğinde DALL-E kullanacağını belirt." }];
+
+    // --- SES TANIMA ---
+    const micBtn = document.getElementById('micBtn');
+    const inputField = document.getElementById('userInput');
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'tr-TR';
+        micBtn.onclick = () => { recognition.start(); micBtn.classList.add('recording'); };
+        recognition.onresult = (e) => { inputField.value = e.results[0][0].transcript; micBtn.classList.remove('recording'); processChat(); };
+        recognition.onend = () => micBtn.classList.remove('recording');
+    }
+
+    // --- ANA MOTOR ---
+    async function processChat() {
+        const text = inputField.value.trim();
+        if (!text) return;
+
+        addMessage('user', text);
+        inputField.value = '';
+
+        // Resim isteği mi kontrol et?
+        const isImageRequest = /çiz|oluştur|yap|resim|fotoğraf/i.test(text);
+
+        if (isImageRequest) {
+            generateImage(text);
+        } else {
+            generateText(text);
+        }
+    }
+
+    // --- METİN ÜRETME (GPT) ---
+    async function generateText(prompt) {
+        messages.push({ role: "user", content: prompt });
+        try {
+            const res = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}` },
+                body: JSON.stringify({ model: "gpt-3.5-turbo", messages: messages })
+            });
+            const data = await res.json();
+            const aiReply = data.choices[0].message.content;
+            addMessage('ai', aiReply);
+            messages.push({ role: "assistant", content: aiReply });
+        } catch (e) { addMessage('ai', "Hata: " + e.message); }
+    }
+
+    // --- RESİM ÜRETME (DALL-E) ---
+    async function generateImage(prompt) {
+        addMessage('ai', "Hemen hayal ediyorum ve çiziyorum, lütfen bekle...");
+        try {
+            const res = await fetch('https://api.openai.com/v1/images/generations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}` },
+                body: JSON.stringify({
+                    prompt: prompt,
+                    n: 1,
+                    size: "512x512"
+                })
+            });
+            const data = await res.json();
+            const imageUrl = data.data[0].url;
+            
+            const output = document.getElementById('chat-output');
+            const imgDiv = document.createElement('div');
+            imgDiv.className = 'message ai-message';
+            imgDiv.innerHTML = `İşte çizdiğim resim: <br><img src="${imageUrl}" class="ai-image" onclick="window.open('${imageUrl}')">`;
+            output.appendChild(imgDiv);
+            output.scrollTop = output.scrollHeight;
+        } catch (e) { addMessage('ai', "Resim oluşturulurken bir hata oluştu."); }
+    }
+
+    function addMessage(sender, text) {
+        const output = document.getElementById('chat-output');
+        const div = document.createElement('div');
+        div.className = `message ${sender}-message`;
+        div.innerText = text;
+        output.appendChild(div);
+        output.scrollTop = output.scrollHeight;
+    }
+
+    inputField.addEventListener("keypress", (e) => { if (e.key === "Enter") processChat(); });
+</script>
+
+</body>
+</html>
