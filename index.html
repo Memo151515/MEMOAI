@@ -3,44 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MEMO AI</title>
+    <title>MEMO AI - Pro Dashboard</title>
     <style>
         :root {
             --primary-red: #ff0000;
             --dark-bg: #0a0a0a;
-            --chat-bg: #161616;
+            --sidebar-bg: #111111;
             --text-color: #ffffff;
         }
 
         body {
-            font-family: 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             background-color: var(--dark-bg);
             color: var(--text-color);
             margin: 0;
             display: flex;
-            flex-direction: column;
             height: 100vh;
             overflow: hidden;
         }
 
-        header {
+        /* --- SIDEBAR --- */
+        #sidebar {
+            width: 280px;
+            background: var(--sidebar-bg);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #222;
+            transition: 0.3s;
+            position: fixed;
+            height: 100%;
+            z-index: 1000;
+            left: -280px;
+        }
+
+        #sidebar.open { left: 0; }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #222;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+        }
+
+        .history-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .history-item {
+            padding: 12px;
+            margin-bottom: 8px;
+            background: #1a1a1a;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: 0.2s;
+        }
+
+        .history-item:hover { border-color: var(--primary-red); }
+
+        .clear-btn {
             padding: 15px;
-            text-align: center;
+            background: #1a0000;
+            color: #ff4444;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* --- MAIN --- */
+        #main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        header {
+            padding: 15px 20px;
+            background: #000;
+            display: flex;
+            align-items: center;
             border-bottom: 2px solid var(--primary-red);
-            background: rgba(0,0,0,0.8);
-            z-index: 10;
         }
 
-        .logo-red {
-            width: 50px; height: 50px;
-            fill: var(--primary-red);
-            filter: drop-shadow(0 0 12px var(--primary-red));
+        .hamburger {
+            font-size: 24px;
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            margin-right: 15px;
         }
 
-        h1 {
-            font-size: 1rem;
-            margin: 5px 0 0;
-            letter-spacing: 4px;
+        header h1 {
+            flex: 1;
+            font-size: 1.1rem;
+            margin: 0;
+            letter-spacing: 2px;
             color: var(--primary-red);
             text-transform: uppercase;
         }
@@ -52,43 +116,31 @@
             display: flex;
             flex-direction: column;
             gap: 15px;
-            background-image: radial-gradient(circle at center, #1a0000 0%, #0a0a0a 100%);
+            background: radial-gradient(circle at center, #1a0000 0%, #0a0a0a 100%);
         }
 
         .message {
             max-width: 80%;
-            padding: 14px 20px;
-            border-radius: 20px;
-            font-size: 0.95rem;
+            padding: 14px 18px;
+            border-radius: 15px;
             line-height: 1.5;
-            animation: fadeIn 0.3s ease;
+            word-wrap: break-word;
         }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         .user-message { align-self: flex-end; background: #2c2c2c; border-bottom-right-radius: 2px; }
-        .ai-message {
-            align-self: flex-start;
-            background: var(--primary-red);
-            color: white;
-            border-bottom-left-radius: 2px;
-            box-shadow: 0 4px 15px rgba(255, 0, 0, 0.2);
-        }
-
-        .loading { font-style: italic; opacity: 0.7; font-size: 0.8rem; }
+        .ai-message { align-self: flex-start; background: var(--primary-red); border-bottom-left-radius: 2px; box-shadow: 0 4px 15px rgba(255,0,0,0.1); }
 
         .controls {
             padding: 20px;
             background: #111;
             display: flex;
-            align-items: center;
             gap: 12px;
             border-top: 1px solid #222;
         }
 
-        input#userInput {
+        #userInput {
             flex: 1;
-            padding: 15px 20px;
+            padding: 14px 20px;
             border-radius: 30px;
             border: 1px solid #333;
             background: #1e1e1e;
@@ -96,54 +148,83 @@
             outline: none;
         }
 
-        .btn-send { 
-            background: var(--primary-red); 
-            color: white; 
-            width: 50px; height: 50px;
-            border-radius: 50%;
+        .send-btn {
+            background: var(--primary-red);
             border: none;
+            width: 48px; height: 48px;
+            border-radius: 50%;
+            color: white;
             cursor: pointer;
+            font-size: 20px;
         }
+        
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        .overlay.active { display: block; }
     </style>
 </head>
 <body>
 
-<header>
-    <svg class="logo-red" viewBox="0 0 24 24">
-        <path d="M12,2L14.5,9.5L22,12L14.5,14.5L12,22L9.5,14.5L2,12L9.5,9.5L12,2Z" />
-    </svg>
-    <h1>MEMO AI</h1>
-</header>
+<div id="overlay" class="overlay" onclick="toggleMenu()"></div>
 
-<div id="chat-output">
+<div id="sidebar">
+    <div class="sidebar-header">
+        <span>Sohbet Geçmişi</span>
+        <button onclick="toggleMenu()" style="background:none; border:none; color:white; font-size:20px; cursor:pointer;">✕</button>
     </div>
+    <div id="historyList" class="history-list"></div>
+    <button class="clear-btn" onclick="clearHistory()">Tüm Geçmişi Sil</button>
+</div>
 
-<div class="controls">
-    <input type="text" id="userInput" placeholder="Mesajınızı yazın...">
-    <button onclick="processChat()" class="btn-send">➤</button>
+<div id="main">
+    <header>
+        <button class="hamburger" onclick="toggleMenu()">☰</button>
+        <h1>MEMO AI PRO</h1>
+    </header>
+
+    <div id="chat-output"></div>
+
+    <div class="controls">
+        <input type="text" id="userInput" placeholder="Mesajınızı yazın...">
+        <button onclick="processChat()" class="send-btn">➤</button>
+    </div>
 </div>
 
 <script>
-    const PORTKEY_API_KEY = 'RHwmqEtsrEMKtdCFwsS763LaeBC6'; 
-    const PORTKEY_GATEWAY_URL = "https://api.portkey.ai/v1/chat/completions";
+    // AYARLAR
+    const PORTKEY_API_KEY = 'RHwmqEtsrEMKtdCFwsS763LaeBC6';
+    const MODEL = "gemini-pro-latest"; // İstediğin spesifik model
 
-    let chatHistory = [
-        { role: "system", content: "Senin adın MEMO AI. Gemini modelini kullanıyorsun." }
-    ];
+    // Depolamadan verileri çek (Yoksa boş dizi başlat)
+    let chatHistory = JSON.parse(localStorage.getItem('memo_pro_chats')) || [];
+
+    window.onload = () => {
+        renderChat();
+        updateSidebar();
+    };
+
+    function toggleMenu() {
+        document.getElementById('sidebar').classList.toggle('open');
+        document.getElementById('overlay').classList.toggle('active');
+    }
 
     async function processChat() {
-        const inputField = document.getElementById('userInput');
-        const text = inputField.value.trim();
+        const input = document.getElementById('userInput');
+        const text = input.value.trim();
         if (!text) return;
 
-        addMessage('user', text);
-        inputField.value = '';
+        // Kullanıcı mesajını ekle ve render et
         chatHistory.push({ role: "user", content: text });
-
-        const loadingId = addMessage('ai', 'Düşünüyor...', true);
+        renderChat();
+        input.value = '';
 
         try {
-            const response = await fetch(PORTKEY_GATEWAY_URL, {
+            const response = await fetch("https://api.portkey.ai/v1/chat/completions", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -151,45 +232,61 @@
                     "x-portkey-provider": "google"
                 },
                 body: JSON.stringify({
-                    model: "gemini-1.5-flash",
-                    messages: chatHistory
+                    model: MODEL,
+                    messages: [
+                        { role: "system", content: "Senin adın MEMO AI. Google Gemini Pro Latest modelisin. Kurucun Mehmet Can YILDIRIM'dır." },
+                        ...chatHistory
+                    ]
                 })
             });
 
             const data = await response.json();
-            
-            // Yükleniyor mesajını kaldır
-            document.getElementById(loadingId).remove();
+            const aiReply = data.choices[0].message.content;
 
-            if (data.choices && data.choices[0]) {
-                const aiReply = data.choices[0].message.content;
-                addMessage('ai', aiReply);
-                chatHistory.push({ role: "assistant", content: aiReply });
-            } else {
-                console.error("API Hatası Detayı:", data);
-                addMessage('ai', "Hata: " + (data.error?.message || "Bilinmeyen bir API hatası oluştu."));
-            }
+            chatHistory.push({ role: "assistant", content: aiReply });
+            saveData();
 
         } catch (e) {
-            document.getElementById(loadingId).remove();
-            addMessage('ai', "Bağlantı hatası! Portkey Gateway erişimi reddetti.");
+            console.error(e);
+            alert("Bağlantı hatası! Portkey veya Model yanıt vermedi.");
         }
     }
 
-    function addMessage(sender, text, isLoading = false) {
+    function renderChat() {
         const output = document.getElementById('chat-output');
-        const div = document.createElement('div');
-        const id = "msg-" + Date.now();
-        div.id = id;
-        div.className = `message ${sender}-message ${isLoading ? 'loading' : ''}`;
-        div.innerText = text;
-        output.appendChild(div);
+        output.innerHTML = chatHistory.map(msg => `
+            <div class="message ${msg.role === 'user' ? 'user-message' : 'ai-message'}">
+                ${msg.content}
+            </div>
+        `).join('');
         output.scrollTop = output.scrollHeight;
-        return id;
     }
 
-    document.getElementById('userInput').addEventListener("keypress", (e) => { 
-        if (e.key === "Enter") processChat(); 
+    function updateSidebar() {
+        const list = document.getElementById('historyList');
+        const userMsgs = chatHistory.filter(m => m.role === 'user');
+        list.innerHTML = userMsgs.reverse().map(m => `
+            <div class="history-item">${m.content.substring(0, 30)}...</div>
+        `).join('');
+    }
+
+    function saveData() {
+        localStorage.setItem('memo_pro_chats', JSON.stringify(chatHistory));
+        renderChat();
+        updateSidebar();
+    }
+
+    function clearHistory() {
+        if(confirm("Tüm mesaj geçmişi silinecek. Emin misin?")) {
+            localStorage.removeItem('memo_pro_chats');
+            chatHistory = [];
+            renderChat();
+            updateSidebar();
+        }
+    }
+
+    document.getElementById('userInput').addEventListener("keypress", (e) => {
+        if (e.key === "Enter") processChat();
     });
 </script>
 
