@@ -66,12 +66,7 @@
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .user-message {
-            align-self: flex-end;
-            background: #2c2c2c;
-            border-bottom-right-radius: 2px;
-        }
-
+        .user-message { align-self: flex-end; background: #2c2c2c; border-bottom-right-radius: 2px; }
         .ai-message {
             align-self: flex-start;
             background: var(--primary-red);
@@ -79,6 +74,8 @@
             border-bottom-left-radius: 2px;
             box-shadow: 0 4px 15px rgba(255, 0, 0, 0.2);
         }
+
+        .loading { font-style: italic; opacity: 0.7; font-size: 0.8rem; }
 
         .controls {
             padding: 20px;
@@ -97,22 +94,16 @@
             background: #1e1e1e;
             color: white;
             outline: none;
-            transition: 0.3s;
         }
 
-        input#userInput:focus { border-color: var(--primary-red); }
-
-        .btn {
+        .btn-send { 
+            background: var(--primary-red); 
+            color: white; 
             width: 50px; height: 50px;
             border-radius: 50%;
             border: none;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
-
-        .btn-send { background: var(--primary-red); color: white; }
     </style>
 </head>
 <body>
@@ -125,22 +116,19 @@
 </header>
 
 <div id="chat-output">
-    <div class="message ai-message">Sistem Aktif. Portkey üzerinden Gemini Pro ile bağlantı kuruldu. Ben MEMO AI.</div>
-</div>
+    </div>
 
 <div class="controls">
-    <input type="text" id="userInput" placeholder="Mesajınızı buraya yazın...">
-    <button onclick="processChat()" class="btn btn-send">➤</button>
+    <input type="text" id="userInput" placeholder="Mesajınızı yazın...">
+    <button onclick="processChat()" class="btn-send">➤</button>
 </div>
 
 <script>
-    // PORTKEY YAPILANDIRMASI
     const PORTKEY_API_KEY = 'RHwmqEtsrEMKtdCFwsS763LaeBC6'; 
-    const GATEWAY_URL = "https://api.portkey.ai/v1/chat/completions";
+    const PORTKEY_GATEWAY_URL = "https://api.portkey.ai/v1/chat/completions";
 
-    // Sohbet geçmişi (Portkey/OpenAI formatı)
     let chatHistory = [
-        { role: "system", content: "Sen MEMO AI'sın. Google'ın en güncel Gemini modellerini Portkey üzerinden kullanıyorsun. Yanıtların zeki, kısa ve öz olsun." }
+        { role: "system", content: "Senin adın MEMO AI. Gemini modelini kullanıyorsun." }
     ];
 
     async function processChat() {
@@ -148,54 +136,60 @@
         const text = inputField.value.trim();
         if (!text) return;
 
-        // Kullanıcı mesajını ekrana bas
         addMessage('user', text);
         inputField.value = '';
-        
-        // Geçmişe ekle
         chatHistory.push({ role: "user", content: text });
 
+        const loadingId = addMessage('ai', 'Düşünüyor...', true);
+
         try {
-            const response = await fetch(GATEWAY_URL, {
+            const response = await fetch(PORTKEY_GATEWAY_URL, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     "x-portkey-api-key": PORTKEY_API_KEY,
-                    "x-portkey-provider": "google" // Portkey'in Gemini'yi tetiklemesi için şart
+                    "x-portkey-provider": "google"
                 },
                 body: JSON.stringify({
-                    model: "gemini-1.5-pro", // En güçlü güncel sürüm
-                    messages: chatHistory,
-                    temperature: 0.7
+                    model: "gemini-1.5-flash",
+                    messages: chatHistory
                 })
             });
 
-            if (!response.ok) throw new Error("Gateway Hatası");
-
             const data = await response.json();
-            const aiReply = data.choices[0].message.content;
+            
+            // Yükleniyor mesajını kaldır
+            document.getElementById(loadingId).remove();
 
-            // AI mesajını ekrana bas ve geçmişe kaydet
-            addMessage('ai', aiReply);
-            chatHistory.push({ role: "assistant", content: aiReply });
+            if (data.choices && data.choices[0]) {
+                const aiReply = data.choices[0].message.content;
+                addMessage('ai', aiReply);
+                chatHistory.push({ role: "assistant", content: aiReply });
+            } else {
+                console.error("API Hatası Detayı:", data);
+                addMessage('ai', "Hata: " + (data.error?.message || "Bilinmeyen bir API hatası oluştu."));
+            }
 
         } catch (e) {
-            console.error(e);
-            addMessage('ai', "Hata: Portkey anahtarı veya Google sağlayıcısı ile ilgili bir sorun oluştu.");
+            document.getElementById(loadingId).remove();
+            addMessage('ai', "Bağlantı hatası! Portkey Gateway erişimi reddetti.");
         }
     }
 
-    function addMessage(sender, text) {
+    function addMessage(sender, text, isLoading = false) {
         const output = document.getElementById('chat-output');
         const div = document.createElement('div');
-        div.className = `message ${sender}-message`;
+        const id = "msg-" + Date.now();
+        div.id = id;
+        div.className = `message ${sender}-message ${isLoading ? 'loading' : ''}`;
         div.innerText = text;
         output.appendChild(div);
         output.scrollTop = output.scrollHeight;
+        return id;
     }
 
-    document.getElementById('userInput').addEventListener("keypress", (e) => {
-        if (e.key === "Enter") processChat();
+    document.getElementById('userInput').addEventListener("keypress", (e) => { 
+        if (e.key === "Enter") processChat(); 
     });
 </script>
 
