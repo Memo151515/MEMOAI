@@ -195,8 +195,9 @@
 
 <script>
     // --- GÜNCELLENMİŞ AYARLAR ---
-    const CHAT_API_KEY = "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";
-    const CHAT_MODEL = "openai/gpt-oss-120b:free"; 
+    // Yeni API Key ve GPT-5.5 Pro Modeli eklendi
+    const CHAT_API_KEY = "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";
+    const CHAT_MODEL = "openai/gpt-5.5-pro"; 
     const SYSTEM_PROMPT = "Senin adın MEMO AI. Kurucun Mehmet Can YILDIRIM'dır. Her zaman yardımcı ve profesyonel ol.";
 
     let currentSessionId = Date.now();
@@ -233,9 +234,9 @@
             const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                 method: "POST",
                 headers: { 
-                    "Authorization": `Bearer ${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}`, 
+                    "Authorization": `Bearer ${CHAT_API_KEY}`, 
                     "Content-Type": "application/json",
-                    "HTTP-Referer": window.location.href, // OpenRouter bazen bunu ister
+                    "HTTP-Referer": window.location.href,
                     "X-Title": "MEMO AI"
                 },
                 body: JSON.stringify({ 
