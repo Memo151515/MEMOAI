@@ -3,338 +3,184 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MEMO AI</title>
+    <title>MEMO AI - Dashboard</title>
     <style>
         :root {
-            --primary-red: #ff0000;
-            --dark-bg: #0a0a0a;
-            --sidebar-bg: #111111;
-            --text-color: #ffffff;
+            --red: #ff0000;
+            --black: #000000;
+            --dark-gray: #121212;
+            --light-gray: #1e1e1e;
+            --text: #ffffff;
         }
 
-        body {
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--dark-bg);
-            color: var(--text-color);
-            margin: 0;
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { margin: 0; background: var(--black); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
 
-        /* --- SIDEBAR --- */
+        /* --- HAMBURGER MENÜ (SIDEBAR) --- */
         #sidebar {
-            width: 280px;
-            background: var(--sidebar-bg);
-            display: flex;
-            flex-direction: column;
-            border-right: 1px solid #222;
-            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 300px;
+            background: var(--dark-gray);
             position: fixed;
+            left: -300px;
+            top: 0;
             height: 100%;
-            z-index: 1000;
-            left: -280px;
-        }
-
-        #sidebar.open { left: 0; }
-
-        .sidebar-header {
-            padding: 20px;
-            border-bottom: 1px solid #222;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: bold;
-            color: var(--primary-red);
-        }
-
-        .history-list {
-            flex: 1;
-            overflow-y: auto;
-            padding: 15px;
-        }
-
-        .history-item {
-            padding: 12px;
-            margin-bottom: 8px;
-            background: #1a1a1a;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            cursor: pointer;
-            border: 1px solid transparent;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            transition: 0.2s;
-        }
-
-        .history-item:hover { border-color: var(--primary-red); background: #222; }
-
-        .clear-btn {
-            padding: 15px;
-            background: #1a0000;
-            color: #ff4444;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-
-        /* --- MAIN CONTENT --- */
-        #main {
-            flex: 1;
+            transition: 0.4s;
+            z-index: 1001;
             display: flex;
             flex-direction: column;
-            width: 100%;
+            border-right: 2px solid var(--red);
         }
 
-        header {
-            padding: 15px;
-            background: #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-bottom: 2px solid var(--primary-red);
-            position: relative;
-        }
+        #sidebar.active { left: 0; }
 
-        .hamburger {
-            position: absolute;
-            left: 20px;
-            font-size: 24px;
-            background: none;
-            border: none;
-            color: white;
-            cursor: pointer;
-        }
-
-        .header-center {
-            text-align: center;
-            display: flex;
-            flex-direction: column;
+        .sidebar-content { padding: 20px; flex: 1; overflow-y: auto; }
+        .sidebar-header { 
+            padding: 20px; 
+            background: var(--black); 
+            color: var(--red); 
+            font-weight: bold; 
+            display: flex; 
+            justify-content: space-between; 
             align-items: center;
         }
 
-        .logo-red {
-            width: 40px;
-            height: 40px;
-            fill: var(--primary-red);
-            filter: drop-shadow(0 0 8px var(--primary-red));
-        }
+        .section-title { color: var(--red); font-size: 0.9rem; margin-top: 20px; border-bottom: 1px solid #333; padding-bottom: 5px; }
+        
+        /* Geçmiş ve Bellek Kutuları */
+        .history-item { background: var(--light-gray); padding: 10px; margin: 10px 0; border-radius: 5px; font-size: 0.8rem; cursor: pointer; border-left: 3px solid var(--red); }
+        .memory-box { background: #000; padding: 15px; border-radius: 8px; margin-top: 10px; font-family: monospace; font-size: 0.8rem; color: #0f0; }
 
-        h1 {
-            font-size: 1.2rem;
-            margin: 5px 0 0;
-            letter-spacing: 5px;
-            color: var(--primary-red);
-            text-transform: uppercase;
-            font-weight: 900;
-        }
+        /* --- ANA PANEL --- */
+        #main { flex: 1; display: flex; flex-direction: column; width: 100%; transition: 0.4s; }
+        header { background: var(--black); padding: 15px; display: flex; align-items: center; border-bottom: 2px solid var(--red); }
+        .hamburger-btn { background: none; border: none; color: white; font-size: 25px; cursor: pointer; margin-right: 15px; }
+        header h1 { flex: 1; margin: 0; font-size: 1.2rem; color: var(--red); text-align: center; }
 
-        #chat-output {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            background: radial-gradient(circle at center, #1a0000 0%, #0a0a0a 100%);
-        }
+        #chat-output { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .msg { max-width: 80%; padding: 12px; border-radius: 10px; line-height: 1.4; }
+        .user { align-self: flex-end; background: #333; }
+        .ai { align-self: flex-start; background: var(--red); box-shadow: 0 0 10px rgba(255,0,0,0.3); }
 
-        .message {
-            max-width: 80%;
-            padding: 14px 18px;
-            border-radius: 15px;
-            line-height: 1.6;
-            animation: fadeIn 0.3s ease;
-            font-size: 0.95rem;
-        }
+        .input-area { padding: 20px; background: var(--dark-gray); display: flex; gap: 10px; }
+        #userInput { flex: 1; padding: 12px; border-radius: 20px; border: none; background: #000; color: white; outline: none; }
+        .btn { background: var(--red); border: none; color: white; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-weight: bold; }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .user-message { align-self: flex-end; background: #2c2c2c; border-bottom-right-radius: 2px; }
-        .ai-message { 
-            align-self: flex-start; 
-            background: var(--primary-red); 
-            color: white; 
-            border-bottom-left-radius: 2px;
-            box-shadow: 0 4px 20px rgba(255, 0, 0, 0.3);
-        }
-
-        .controls {
-            padding: 20px;
-            background: #111;
-            display: flex;
-            gap: 12px;
-            border-top: 1px solid #222;
-        }
-
-        input#userInput {
-            flex: 1;
-            padding: 14px 25px;
-            border-radius: 30px;
-            border: 1px solid #333;
-            background: #1e1e1e;
-            color: white;
-            outline: none;
-            transition: 0.3s;
-        }
-
-        input#userInput:focus { border-color: var(--primary-red); }
-
-        .send-btn {
-            background: var(--primary-red);
-            border: none;
-            width: 50px; height: 50px;
-            border-radius: 50%;
-            color: white;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            transition: 0.2s;
-        }
-
-        .send-btn:hover { transform: scale(1.05); background: #cc0000; }
-
-        .overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7);
-            z-index: 999;
-        }
-        .overlay.active { display: block; }
+        /* Arkaplanı karartma */
+        #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; }
+        #overlay.active { display: block; }
     </style>
 </head>
 <body>
 
-<div id="overlay" class="overlay" onclick="toggleMenu()"></div>
+<div id="overlay" onclick="toggleSidebar()"></div>
 
 <div id="sidebar">
     <div class="sidebar-header">
-        <span>BELLEK</span>
-        <button onclick="toggleMenu()" style="background:none; border:none; color:white; cursor:pointer; font-size:20px;">✕</button>
+        <span>MEMO AI KONTROL</span>
+        <span style="cursor:pointer" onclick="toggleSidebar()">✕</span>
     </div>
-    <div id="historyList" class="history-list"></div>
-    <button class="clear-btn" onclick="clearHistory()">VERİLERİ TEMİZLE</button>
+    <div class="sidebar-content">
+        <div class="section-title">BELLEK DURUMU</div>
+        <div class="memory-box" id="memoryInfo">
+            > CPU: %12<br>
+            > RAM: 1.3GB (Llama 3.2)<br>
+            > KURUCU: M.C.YILDIRIM<br>
+            > DURUM: Gelişiyor...
+        </div>
+
+        <div class="section-title">SOHBET GEÇMİŞİ</div>
+        <div id="historyContainer"></div>
+        <button onclick="clearHistory()" style="background:none; border:none; color:#666; font-size:10px; cursor:pointer; margin-top:10px;">Geçmişi Temizle</button>
+    </div>
 </div>
 
 <div id="main">
     <header>
-        <button class="hamburger" onclick="toggleMenu()">☰</button>
-        <div class="header-center">
-            <svg class="logo-red" viewBox="0 0 24 24">
-                <path d="M12,2L14.5,9.5L22,12L14.5,14.5L12,22L9.5,14.5L2,12L9.5,9.5L12,2Z" />
-            </svg>
-            <h1>MEMO AI</h1>
-        </div>
+        <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
+        <h1>MEMO AI</h1>
     </header>
 
     <div id="chat-output"></div>
 
-    <div class="controls">
-        <input type="text" id="userInput" placeholder="GPT-5 yapısına sor...">
-        <button onclick="processChat()" class="send-btn">➤</button>
+    <div class="input-area">
+        <input type="text" id="userInput" placeholder="Mesajınızı yazın...">
+        <button class="btn" onclick="sendMessage()">GÖNDER</button>
     </div>
 </div>
 
 <script>
-    const GITHUB_TOKEN = "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";
-    const ENDPOINT = "https://models.inference.ai.azure.com/chat/completions";
-    const MODEL_NAME = "gpt-5"; // İstediğin spesifik yapı
+    const output = document.getElementById('chat-output');
+    const input = document.getElementById('userInput');
+    const historyContainer = document.getElementById('historyContainer');
 
-    let chatHistory = JSON.parse(localStorage.getItem('memo_ai_pro_chats')) || [];
-
-    window.onload = () => {
-        renderChat();
-        updateSidebar();
-    };
-
-    function toggleMenu() {
-        document.getElementById('sidebar').classList.toggle('open');
+    // Menüyü Aç/Kapat
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('active');
         document.getElementById('overlay').classList.toggle('active');
+        loadHistory(); // Menü açıldığında geçmişi güncelle
     }
 
-    async function processChat() {
-        const input = document.getElementById('userInput');
+    // Mesaj Gönder
+    async function sendMessage() {
         const text = input.value.trim();
         if (!text) return;
 
-        chatHistory.push({ role: "user", content: text });
-        renderChat();
+        addMessage(text, 'user');
+        saveToHistory(text);
         input.value = '';
 
         try {
-            const response = await fetch(ENDPOINT, {
+            const response = await fetch("http://localhost:11434/api/generate", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${GITHUB_TOKEN}`
-                },
                 body: JSON.stringify({
-                    model: MODEL_NAME,
-                    messages: [
-                        { role: "system", content: "Senin adın MEMO AI. En gelişmiş GPT altyapısını kullanıyorsun. Mehmet Can Yıldırım tarafından geliştirildin." },
-                        ...chatHistory
-                    ],
-                    temperature: 0.7
+                    model: "llama3.2:1b",
+                    prompt: `Sen Mehmet Can YILDIRIM tarafından yaratılan MEMO AI'sın. Soru: ${text}`,
+                    stream: false
                 })
             });
-
             const data = await response.json();
-            
-            if (data.choices && data.choices[0]) {
-                const aiReply = data.choices[0].message.content;
-                chatHistory.push({ role: "assistant", content: aiReply });
-                saveData();
-            } else {
-                throw new Error("Model henüz aktif değil veya bir hata oluştu.");
-            }
-
+            addMessage(data.response, 'ai');
         } catch (e) {
-            console.error(e);
-            const output = document.getElementById('chat-output');
-            output.innerHTML += `<div class="message ai-message" style="background: #440000;">Hata: Model erişimi başarısız. Anahtarı veya model ismini kontrol et.</div>`;
+            addMessage("Ollama bağlı değil Mehmet Can. Lütfen kontrol et.", 'ai');
         }
     }
 
-    function renderChat() {
-        const output = document.getElementById('chat-output');
-        output.innerHTML = chatHistory.map(msg => `
-            <div class="message ${msg.role === 'user' ? 'user-message' : 'ai-message'}">
-                ${msg.content}
-            </div>
-        `).join('');
+    function addMessage(text, type) {
+        const div = document.createElement('div');
+        div.className = `msg ${type}`;
+        div.innerText = text;
+        output.appendChild(div);
         output.scrollTop = output.scrollHeight;
     }
 
-    function updateSidebar() {
-        const list = document.getElementById('historyList');
-        const userMsgs = chatHistory.filter(m => m.role === 'user').reverse();
-        list.innerHTML = userMsgs.map(m => `
-            <div class="history-item" onclick="toggleMenu()">${m.content.substring(0, 35)}...</div>
-        `).join('');
+    // --- GEÇMİŞ YÖNETİMİ ---
+    function saveToHistory(text) {
+        let history = JSON.parse(localStorage.getItem('memo_history') || '[]');
+        history.unshift(text); // Yeni mesajı başa ekle
+        if(history.length > 10) history.pop(); // Sadece son 10 mesaj
+        localStorage.setItem('memo_history', JSON.stringify(history));
     }
 
-    function saveData() {
-        localStorage.setItem('memo_ai_pro_chats', JSON.stringify(chatHistory));
-        renderChat();
-        updateSidebar();
+    function loadHistory() {
+        historyContainer.innerHTML = '';
+        let history = JSON.parse(localStorage.getItem('memo_history') || '[]');
+        history.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            div.innerText = item.substring(0, 30) + "...";
+            historyContainer.appendChild(div);
+        });
     }
 
     function clearHistory() {
-        if(confirm("Tüm bellek silinecek. Emin misin?")) {
-            localStorage.removeItem('memo_ai_pro_chats');
-            chatHistory = [];
-            saveData();
-        }
+        localStorage.removeItem('memo_history');
+        loadHistory();
     }
 
-    document.getElementById('userInput').addEventListener("keypress", (e) => {
-        if (e.key === "Enter") processChat();
-    });
+    input.addEventListener("keypress", (e) => { if(e.key === "Enter") sendMessage(); });
+    
+    // Sayfa açıldığında geçmişi yükle
+    loadHistory();
 </script>
 
 </body>
