@@ -10,13 +10,11 @@
     
     <style>
         :root {
-            --bg-gradient: linear-gradient(135deg, #0072ff 0%, #00c6ff 30%, #0fd850 70%, #f9f9f9 100%);
+            --bg-gradient: linear-gradient(135deg, #0052d4 0%, #4364f7 30%, #6fb1fc 70%, #0fd850 100%);
             --glass-bg: rgba(255, 255, 255, 0.45);
             --glass-border: rgba(255, 255, 255, 0.6);
-            --glass-shadow: 0 8px 32px 0 rgba(31, 135, 241, 0.3);
-            --text-color: #0b2e46;
-            --api-url: 'http://127.0.0.1:7878';
-            --api-key: 'memo_PYPe-6YNEnL1x9EwLnVIvqCsKN4swEJm';
+            --glass-shadow: 0 8px 32px 0 rgba(11, 46, 70, 0.25);
+            --text-color: #05263e;
         }
 
         * {
@@ -24,7 +22,7 @@
             margin: 0;
             padding: 0;
             font-family: 'Plus Jakarta Sans', sans-serif;
-            user-select: none; /* Frutiger Aero OS hissi */
+            user-select: none;
         }
 
         body {
@@ -35,38 +33,53 @@
             padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
-            position: relative;
-            overflow-x: hidden;
+            gap: 15px;
+            overflow: hidden;
+            align-items: center;
+            justify-content: center;
         }
 
-        /* Arka plan su kabarcığı efektleri (Frutiger Aero klasiği) */
+        /* Frutiger Aero Canlı Su Hücreleri */
         body::before, body::after {
             content: '';
             position: fixed;
-            width: 300px;
-            height: 300px;
+            width: 400px;
+            height: 400px;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
-            filter: blur(40px);
+            background: rgba(255, 255, 255, 0.25);
+            filter: blur(50px);
             z-index: -1;
             pointer-events: none;
         }
-        body::before { top: 10%; left: 10%; background: rgba(15, 216, 80, 0.4); }
-        body::after { bottom: 15%; right: 10%; background: rgba(0, 198, 255, 0.5); }
+        body::before { top: -5%; left: -5%; background: rgba(15, 216, 80, 0.35); }
+        body::after { bottom: -5%; right: -5%; background: rgba(0, 198, 255, 0.4); }
 
-        /* Üst Menü / Header */
-        header {
+        /* Sadece Sohbet Paneli */
+        .chat-container {
+            width: 100%;
+            max-width: 900px;
+            height: calc(100vh - 40px);
             background: var(--glass-bg);
-            backdrop-filter: blur(14px) saturate(180%);
-            -webkit-backdrop-filter: blur(14px) saturate(180%);
+            backdrop-filter: blur(20px) saturate(190%);
+            -webkit-backdrop-filter: blur(20px) saturate(190%);
             border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: 15px 30px;
+            border-radius: 28px;
+            box-shadow: var(--glass-shadow), inset 0 4px 8px rgba(255,255,255,0.6);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Üst Header Alanı (Sohbet İçinde Entegre) */
+        .chat-header {
+            padding: 15px 25px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.4);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: var(--glass-shadow), inset 0 2px 4px rgba(255,255,255,0.7);
+            background: rgba(255, 255, 255, 0.2);
+            z-index: 3;
         }
 
         .logo-area {
@@ -77,540 +90,401 @@
 
         /* 4 Uçlu Parlak Kırmızı Yıldız Logosu */
         .memo-logo {
-            width: 32px;
-            height: 32px;
-            position: relative;
+            width: 26px;
+            height: 26px;
             background: #ff2a2a;
             clip-path: polygon(50% 0%, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0% 50%, 39% 39%);
-            filter: drop-shadow(0 0 8px rgba(255, 42, 42, 0.8));
+            filter: drop-shadow(0 0 6px rgba(255, 42, 42, 0.8));
             animation: pulse-glow 3s infinite ease-in-out;
         }
 
         @keyframes pulse-glow {
-            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 6px rgba(255, 42, 42, 0.6)); }
-            50% { transform: scale(1.1); filter: drop-shadow(0 0 14px rgba(255, 42, 42, 1)); }
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 4px rgba(255, 42, 42, 0.6)); }
+            50% { transform: scale(1.08); filter: drop-shadow(0 0 10px rgba(255, 42, 42, 1)); }
         }
 
         .logo-text {
-            font-size: 24px;
+            font-size: 18px;
             font-weight: 800;
-            color: #053556;
-            letter-spacing: 1px;
-            text-shadow: 0 2px 4px rgba(255,255,255,0.8);
+            color: #032339;
+            letter-spacing: 0.5px;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.8);
         }
 
-        .status-panel {
+        .system-status {
             display: flex;
             align-items: center;
-            gap: 20px;
-        }
-
-        .status-indicator {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 14px;
+            gap: 6px;
+            padding: 4px 10px;
             background: rgba(255, 255, 255, 0.5);
-            border-radius: 30px;
+            border-radius: 20px;
             border: 1px solid rgba(255,255,255,0.6);
-            font-size: 13px;
+            font-size: 11px;
             font-weight: 600;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
         }
 
         .status-dot {
-            width: 10px;
-            height: 10px;
+            width: 7px;
+            height: 7px;
             border-radius: 50%;
             background: #ff3b30;
-            box-shadow: 0 0 8px #ff3b30;
+            box-shadow: 0 0 5px #ff3b30;
         }
 
         .status-dot.active {
             background: #34c759;
-            box-shadow: 0 0 8px #34c759;
+            box-shadow: 0 0 5px #34c759;
         }
 
-        .creator-info {
-            font-size: 12px;
-            opacity: 0.8;
-            text-align: right;
-            line-height: 1.3;
-        }
-
-        /* Ana Grid Yapısı */
-        .main-dashboard {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 20px;
+        /* Mesaj Akış Alanı */
+        .chat-messages {
             flex-grow: 1;
-        }
-
-        @media (max-width: 900px) {
-            .main-dashboard { grid-template-columns: 1fr; }
-        }
-
-        /* Kart Stilleri (Glassmorphism + Frutiger Parlaklığı) */
-        .glass-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(14px) saturate(180%);
-            -webkit-backdrop-filter: blur(14px) saturate(180%);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            padding: 24px;
-            box-shadow: var(--glass-shadow), inset 0 4px 6px rgba(255,255,255,0.6);
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* Cam kart yansıması çizgisi */
-        .glass-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 40%;
-            background: linear-gradient(to bottom, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 100%);
-            pointer-events: none;
-        }
-
-        h2 {
-            font-size: 18px;
-            font-weight: 700;
-            color: #053556;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            border-bottom: 1px solid rgba(0, 114, 255, 0.15);
-            padding-bottom: 10px;
-        }
-
-        /* Form Elemanları */
-        input[type="text"], textarea {
-            width: 100%;
-            padding: 12px 16px;
-            background: rgba(255, 255, 255, 0.6);
-            border: 1px solid rgba(0, 114, 255, 0.2);
-            border-radius: 14px;
-            color: #0b2e46;
-            font-size: 14px;
-            outline: none;
-            transition: all 0.3s ease;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
-        }
-
-        input[type="text"]:focus, textarea:focus {
-            background: rgba(255, 255, 255, 0.9);
-            border-color: #0072ff;
-            box-shadow: 0 0 10px rgba(0, 114, 255, 0.25), inset 0 2px 4px rgba(0,0,0,0.03);
-        }
-
-        /* Glossy Butonlar (Frutiger Aero İmza Tasarımı) */
-        .glossy-btn {
-            background: linear-gradient(to bottom, #00c6ff 0%, #0072ff 100%);
-            border: 1px solid #0056c6;
-            border-radius: 14px;
-            color: white;
-            padding: 12px 20px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 4px 15px rgba(0, 114, 255, 0.3), inset 0 2px 3px rgba(255,255,255,0.6);
-            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .glossy-btn:hover {
-            background: linear-gradient(to bottom, #00d2ff 0%, #0081ff 100%);
-            transform: translateY(-1px);
-            box-shadow: 0 6px 18px rgba(0, 114, 255, 0.4), inset 0 2px 3px rgba(255,255,255,0.8);
-        }
-
-        .glossy-btn:active {
-            transform: translateY(1px);
-            box-shadow: 0 2px 6px rgba(0, 114, 255, 0.3);
-        }
-
-        .glossy-btn.green {
-            background: linear-gradient(to bottom, #11ec5a 0%, #0fd850 100%);
-            border-color: #0b9e3a;
-            box-shadow: 0 4px 15px rgba(15, 216, 80, 0.3), inset 0 2px 3px rgba(255,255,255,0.6);
-        }
-        .glossy-btn.green:hover {
-            background: linear-gradient(to bottom, #26f56b 0%, #12e356 100%);
-        }
-
-        /* Hafıza Listesi Kutusu */
-        .memory-container {
-            max-height: 250px;
+            padding: 25px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            padding-right: 5px;
+            gap: 15px;
         }
 
-        /* Özel Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.2); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb { background: rgba(0, 114, 255, 0.4); border-radius: 10px; }
-
-        .memory-item {
-            background: rgba(255, 255, 255, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            border-radius: 12px;
-            padding: 12px;
-            font-size: 13.5px;
-            box-shadow: inset 0 1px 2px rgba(255,255,255,0.5);
-            transition: background 0.2s;
-        }
-        .memory-item:hover {
-            background: rgba(255, 255, 255, 0.6);
-        }
-
-        /* Medya Üretim ve Önizleme Alanları */
-        .generation-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-        @media (max-width: 600px) { .generation-grid { grid-template-columns: 1fr; } }
-
-        .preview-box {
-            margin-top: 10px;
-            background: rgba(0, 0, 0, 0.05);
-            border-radius: 14px;
-            border: 1px dashed rgba(0, 114, 255, 0.2);
-            min-height: 150px;
+        .message {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            overflow: hidden;
-            position: relative;
+            max-width: 75%;
+            animation: fadeIn 0.25s ease;
         }
 
-        .preview-box img, .preview-box video {
-            width: 100%;
-            height: auto;
-            max-height: 220px;
-            object-fit: contain;
-            border-radius: 12px;
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
-        .preview-box audio {
-            width: 90%;
-        }
+        .message.user { align-self: flex-end; }
+        .message.system { align-self: flex-start; }
 
-        .download-badge {
-            position: absolute;
-            bottom: 8px;
-            right: 8px;
-            background: rgba(255,255,255,0.9);
-            padding: 4px 10px;
+        .msg-bubble {
+            padding: 12px 18px;
             border-radius: 20px;
+            font-size: 14px;
+            line-height: 1.5;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.04);
+        }
+
+        .user .msg-bubble {
+            background: linear-gradient(to bottom, #ffffff 0%, #e3f2fd 100%);
+            border: 1px solid rgba(0, 114, 255, 0.18);
+            color: #05263e;
+            border-bottom-right-radius: 4px;
+        }
+
+        .system .msg-bubble {
+            background: linear-gradient(to bottom, #00c6ff 0%, #0072ff 100%);
+            border: 1px solid #0056c6;
+            color: white;
+            border-bottom-left-radius: 4px;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.12);
+            box-shadow: 0 4px 12px rgba(0, 114, 255, 0.15), inset 0 2px 3px rgba(255,255,255,0.4);
+        }
+
+        .msg-meta {
+            font-size: 10px;
+            margin-top: 4px;
+            opacity: 0.5;
+            padding: 0 6px;
+        }
+        .user .msg-meta { text-align: right; }
+
+        /* Multimedya Kartları */
+        .media-attachment {
+            margin-top: 8px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 14px;
+            padding: 8px;
+            border: 1px solid rgba(255,255,255,1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            display: inline-block;
+            max-width: 100%;
+        }
+
+        .media-attachment img, .media-attachment video {
+            max-width: 100%;
+            max-height: 280px;
+            border-radius: 10px;
+            display: block;
+        }
+
+        .media-attachment audio {
+            width: 260px;
+            display: block;
+            margin: 4px 0;
+        }
+
+        .btn-download {
+            display: block;
+            text-align: center;
+            background: #f0f7ff;
+            color: #0072ff;
             font-size: 11px;
             font-weight: bold;
-            color: #0072ff;
+            padding: 6px;
+            margin-top: 6px;
+            border-radius: 8px;
             text-decoration: none;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border: 1px solid rgba(0,114,255,0.12);
+            transition: all 0.2s;
+        }
+        .btn-download:hover { background: #0072ff; color: white; }
+
+        /* Alt Alan */
+        .chat-input-area {
+            background: rgba(255, 255, 255, 0.4);
+            border-top: 1px solid rgba(255,255,255,0.5);
+            padding: 15px 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
         }
 
-        /* Kimlik Bilgisi Tablosu */
-        .identity-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-        }
-        .identity-table td {
-            padding: 6px 0;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
-        }
-        .identity-table td:first-child {
-            font-weight: bold;
-            color: #053556;
-            width: 40%;
+        input[type="text"] {
+            flex-grow: 1;
+            padding: 14px 22px;
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(0, 114, 255, 0.22);
+            border-radius: 30px;
+            color: #05263e;
+            font-size: 14px;
+            outline: none;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.04);
+            transition: all 0.25s;
         }
 
-        .loading-text {
-            font-size: 12px;
-            color: #0072ff;
-            animation: pulse-text 1.5s infinite;
+        input[type="text"]:focus {
+            background: #ffffff;
+            border-color: #0072ff;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.04), 0 0 12px rgba(0, 114, 255, 0.25);
         }
-        @keyframes pulse-text { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+
+        .btn-send {
+            background: linear-gradient(to bottom, #11ec5a 0%, #0fd850 100%);
+            border: 1px solid #0b9e3a;
+            border-radius: 30px;
+            color: white;
+            padding: 14px 28px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(15, 216, 80, 0.25), inset 0 2px 3px rgba(255,255,255,0.5);
+            transition: transform 0.1s;
+        }
+        .btn-send:hover { transform: scale(1.02); }
+        .btn-send:active { transform: scale(0.98); }
+
+        .command-bar {
+            display: flex;
+            gap: 8px;
+            padding: 0 20px 8px 20px;
+            overflow-x: auto;
+        }
+
+        .cmd-tag {
+            font-size: 11px;
+            background: rgba(255,255,255,0.6);
+            border: 1px solid rgba(0,114,255,0.12);
+            padding: 5px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .cmd-tag:hover { background: #e3f2fd; border-color: #0072ff; }
+
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0, 114, 255, 0.25); border-radius: 10px; }
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="logo-area">
-            <div class="memo-logo"></div>
-            <div class="logo-text">MEMO AI</div>
-        </div>
-        <div class="status-panel">
-            <div class="status-indicator">
-                <div class="status-dot" id="statusDot"></div>
-                <span id="statusText">Bağlanıyor...</span>
-            </div>
-            <div class="creator-info">
-                <strong>Kurucu:</strong><br>Mehmet Can YILDIRIM
-            </div>
-        </div>
-    </header>
-
-    <main class="main-dashboard">
+    <div class="chat-container">
         
-        <div style="display: flex; flex-direction: column; gap: 20px;">
-            
-            <div class="glass-card">
-                <h2>🧬 Sistem Kimliği</h2>
-                <div id="identityContent">
-                    <p class="loading-text">Kimlik bilgileri yükleniyor...</p>
+        <div class="chat-header">
+            <div class="logo-area">
+                <div class="memo-logo"></div>
+                <div class="logo-text">MEMO AI</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="system-status">
+                    <div class="status-dot" id="statusDot"></div>
+                    <span id="statusText">Yerel Ağ...</span>
+                </div>
+                <div style="font-size: 10px; opacity: 0.7; text-align: right; line-height: 1.2;">
+                    Mehmet Can YILDIRIM
                 </div>
             </div>
-
-            <div class="glass-card">
-                <h2>🧠 Hafıza Yönetimi & Sohbet</h2>
-                <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <textarea id="memoryInput" rows="3" placeholder="Sisteme kaydedilecek yeni bir hafıza veya sohbet detayı girin..."></textarea>
-                    <button class="glossy-btn green" onclick="addMemory()">Hafızaya Ekle / Çek</button>
-                </div>
-                
-                <h3 style="font-size:14px; margin-top:10px; color:#053556;">📜 Hafıza Kayıtları (Son 20)</h3>
-                <div class="memory-container" id="memoryList">
-                    <p class="loading-text">Kayıtlar getiriliyor...</p>
-                </div>
-            </div>
-
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 20px;">
-            
-            <div class="generation-grid">
-                
-                <div class="glass-card">
-                    <h2>🖼️ Fotoğraf Oluşturma</h2>
-                    <input type="text" id="imagePrompt" placeholder="Görsel için prompt yazın...">
-                    <button class="glossy-btn" onclick="generateImage()">Görsel Üret (PNG)</button>
-                    <div class="preview-box" id="imagePreview">
-                        <span style="font-size:12px; opacity:0.6;">Üretilen PNG burada görünecek</span>
-                    </div>
-                </div>
+        <div class="chat-messages" id="chatContainer"></div>
 
-                <div class="glass-card">
-                    <h2>🎬 Video Oluşturma</h2>
-                    <input type="text" id="videoPrompt" placeholder="1 dk'lık MP4 video promptu...">
-                    <button class="glossy-btn" onclick="generateVideo()">Video Üret (MP4)</button>
-                    <div class="preview-box" id="videoPreview">
-                        <span style="font-size:12px; opacity:0.6;">Üretilen MP4 burada görünecek</span>
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="glass-card">
-                <h2>🔊 Sesli Mesaj Oluşturma</h2>
-                <textarea id="voicePrompt" rows="2" placeholder="Seslendirilecek metni buraya yazın..."></textarea>
-                <button class="glossy-btn" onclick="generateVoice()">Ses Dosyası Üret (WAV)</button>
-                <div class="preview-box" id="voicePreview" style="min-height: 90px;">
-                    <span style="font-size:12px; opacity:0.6;">Üretilen WAV burada dinlenecek</span>
-                </div>
-            </div>
-
+        <div class="command-bar">
+            <div class="cmd-tag" onclick="setCommand('görsel oluştur: ')">🖼️ Görsel (PNG)</div>
+            <div class="cmd-tag" onclick="setCommand('video oluştur: ')">🎬 Video (MP4)</div>
+            <div class="cmd-tag" onclick="setCommand('seslendir: ')">🔊 Seslendir (WAV)</div>
         </div>
 
-    </main>
+        <div class="chat-input-area">
+            <input type="text" id="userInput" placeholder="Yerel API sunucusuna veri veya komut gönder..." onkeydown="if(event.key === 'Enter') processInput()">
+            <button class="btn-send" onclick="processInput()">Gönder</button>
+        </div>
+
+    </div>
 
     <script>
-        // Tanımlı API Bilgileri
-        const API_BASE = var(--api-url); // CSS değişkeninden ya da doğrudan string olarak:
-        const BASE_URL = 'http://127.0.0.1:7878';
-        const API_KEY = 'memo_PYPe-6YNEnL1x9EwLnVIvqCsKN4swEJm';
+        // YEREL API YAPILANDIRMASI
+        const LOCAL_API_URL = 'http://127.0.0.1:7878';
+        const MEMO_API_KEY = 'memo_PYPe-6YNEnL1x9EwLnVIvqCsKN4swEJm';
 
-        // Ortak Request Fonksiyonu
         async function memoFetch(endpoint, method = 'GET', body = null) {
             const config = {
                 method: method,
                 headers: {
-                    'X-MEMO-API-Key': API_KEY,
+                    'X-MEMO-API-Key': MEMO_API_KEY,
                     'Content-Type': 'application/json'
                 }
             };
-            if (body) {
-                config.body = JSON.stringify(body);
-            }
-            return fetch(`${BASE_URL}${endpoint}`, config);
+            if (body) config.body = JSON.stringify(body);
+            return fetch(`${LOCAL_API_URL}${endpoint}`, config);
         }
 
-        // 1. Sistem Durumu ve Kimlik Bilgisini Kontrol Etme
-        async function checkStatusAndIdentity() {
+        function setCommand(text) {
+            const input = document.getElementById('userInput');
+            input.value = text;
+            input.focus();
+        }
+
+        function appendMessage(sender, text, attachmentHtml = '') {
+            const container = document.getElementById('chatContainer');
+            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${sender}`;
+            
+            msgDiv.innerHTML = `
+                <div class="msg-bubble">
+                    ${text}
+                    ${attachmentHtml}
+                </div>
+                <div class="msg-meta">${sender === 'user' ? 'Siz' : 'MEMO AI'} • ${timeStr}</div>
+            `;
+            container.appendChild(msgDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // İstek Motoru ve Yönlendirmeler
+        async function processInput() {
+            const inputEl = document.getElementById('userInput');
+            const rawText = inputEl.value.trim();
+            if (!rawText) return;
+
+            appendMessage('user', rawText);
+            inputEl.value = '';
+
+            const lowerText = rawText.toLowerCase();
+
+            // GÖRSEL (PNG)
+            if (lowerText.startsWith('görsel oluştur') || lowerText.startsWith('fotoğraf oluştur')) {
+                const prompt = rawText.replace(/^(görsel oluştur|fotoğraf oluştur)[:\s]*/i, '');
+                appendMessage('system', `⏳ "${prompt}" için yerel sunucuda PNG çiziliyor...`);
+                
+                try {
+                    const res = await memoFetch('/v1/images', 'POST', { prompt: prompt });
+                    if(res.ok) {
+                        const data = await res.json();
+                        const mediaUrl = `${LOCAL_API_URL}/media/${data.filename}`;
+                        const attachment = `
+                            <div class="media-attachment">
+                                <img src="${mediaUrl}" alt="MEMO AI PNG">
+                                <a href="${mediaUrl}" download="${data.filename}" class="btn-download" target="_blank">📥 PNG İndir</a>
+                            </div>`;
+                        appendMessage('system', `✨ Görseliniz oluşturuldu:`, attachment);
+                    } else { throw new Error(); }
+                } catch { appendMessage('system', `❌ Görsel oluşturulurken lokal sunucu hatası oluştu.`); }
+            }
+            
+            // VİDEO (MP4)
+            else if (lowerText.startsWith('video oluştur')) {
+                const prompt = rawText.replace(/^video oluştur[:\s]*/i, '');
+                appendMessage('system', `⏳ "${prompt}" promptuyla yerel sunucuda MP4 video işleniyor...`);
+                
+                try {
+                    const res = await memoFetch('/v1/videos', 'POST', { prompt: prompt });
+                    if(res.ok) {
+                        const data = await res.json();
+                        const mediaUrl = `${LOCAL_API_URL}/media/${data.filename}`;
+                        const attachment = `
+                            <div class="media-attachment">
+                                <video src="${mediaUrl}" controls></video>
+                                <a href="${mediaUrl}" download="${data.filename}" class="btn-download" target="_blank">📥 MP4 İndir</a>
+                            </div>`;
+                        appendMessage('system', `🎬 Videonuz hazırlandı:`, attachment);
+                    } else { throw new Error(); }
+                } catch { appendMessage('system', `❌ Video oluşturulurken lokal sunucu hatası oluştu.`); }
+            }
+
+            // SESLENDİRME (WAV)
+            else if (lowerText.startsWith('seslendir')) {
+                const textToVoice = rawText.replace(/^seslendir[:\s]*/i, '');
+                appendMessage('system', `⏳ Metin yerel ses motoruyla WAV dosyasına dönüştürülüyor...`);
+                
+                try {
+                    const res = await memoFetch('/v1/voice', 'POST', { text: textToVoice });
+                    if(res.ok) {
+                        const data = await res.json();
+                        const mediaUrl = `${LOCAL_API_URL}/media/${data.filename}`;
+                        const attachment = `
+                            <div class="media-attachment">
+                                <audio src="${mediaUrl}" controls></audio>
+                                <a href="${mediaUrl}" download="${data.filename}" class="btn-download" target="_blank">📥 WAV İndir</a>
+                            </div>`;
+                        appendMessage('system', `🔊 Ses dosyası oluşturuldu:`, attachment);
+                    } else { throw new Error(); }
+                } catch { appendMessage('system', `❌ Ses dosyası oluşturulamadı.`); }
+            }
+
+            // HAFIZA KAYDI VE SOHBET SENKRONİZASYONU
+            else {
+                appendMessage('system', `🧠 Bilgi yerel hafıza havuzuna işleniyor...`);
+                try {
+                    const resMem = await memoFetch('/v1/memories', 'POST', { text: rawText });
+                    await memoFetch('/v1/pull', 'POST', { hint: rawText });
+
+                    if(resMem.ok) {
+                        appendMessage('system', `✅ Bilgi yerel hafızaya başarıyla senkronize edildi.`);
+                    } else { throw new Error(); }
+                } catch {
+                    appendMessage('system', `⚠️ Yerel API bağlantısı kurulamadı. Sunucunuzun açık olduğundan emin olun.`);
+                }
+            }
+        }
+
+        // API Durum Kontrolü
+        async function checkStatus() {
             const dot = document.getElementById('statusDot');
             const text = document.getElementById('statusText');
-            const identityContent = document.getElementById('identityContent');
 
             try {
                 const response = await memoFetch('/v1/identity');
                 if(response.ok) {
-                    const data = await response.json();
                     dot.classList.add('active');
-                    text.innerText = "Sistem Aktif";
-                    
-                    // Gelen kimlik verisine göre dinamik tablo yapımı
-                    let tableHtml = `<table class="identity-table">`;
-                    for (let key in data) {
-                        tableHtml += `<tr><td>${key.toUpperCase()}</td><td>${data[key]}</td></tr>`;
-                    }
-                    tableHtml += `</table>`;
-                    identityContent.innerHTML = tableHtml;
-                } else {
-                    throw new Error("Kimlik alınamadı");
-                }
-            } catch (error) {
+                    text.innerText = "Aktif (127.0.0.1)";
+                } else { throw new Error(); }
+            } catch {
                 dot.classList.remove('active');
-                text.innerText = "Sistem Pasif";
-                identityContent.innerHTML = `<p style="color:#ff3b30; font-size:12px;">Yerel API'ye bağlanılamadı (${BASE_URL}). Lütfen arka planda uygulamanın çalıştığından emin olun.</p>`;
+                text.innerText = "Pasif";
             }
         }
 
-        // 2. Hafızaları Listeleme
-        async function loadMemories() {
-            const container = document.getElementById('memoryList');
-            try {
-                const response = await memoFetch('/v1/memories?limit=20');
-                if (response.ok) {
-                    const data = await response.json();
-                    container.innerHTML = '';
-                    if(data.memories && data.memories.length > 0) {
-                        data.memories.forEach(item => {
-                            const div = document.createElement('div');
-                            div.className = 'memory-item';
-                            div.innerText = item.text || item;
-                            container.appendChild(div);
-                        });
-                    } else {
-                        container.innerHTML = `<span style="font-size:12px; opacity:0.5;">Henüz kaydedilmiş hafıza yok.</span>`;
-                    }
-                }
-            } catch (e) {
-                container.innerHTML = `<span style="font-size:12px; color:#ff3b30;">Hafıza kayıtları listelenemedi.</span>`;
-            }
-        }
-
-        // 3. Yeni Hafıza Ekleme ve Pull Etme
-        async function addMemory() {
-            const input = document.getElementById('memoryInput');
-            const text = input.value.trim();
-            if(!text) return alert("Lütfen bir hafıza metni girin.");
-
-            try {
-                // Önce hafızayı gönderiyoruz
-                const response = await memoFetch('/v1/memories', 'POST', { text: text });
-                // Eşzamanlı tetikleme için pull endpoint'ine de istek atılıyor
-                await memoFetch('/v1/pull', 'POST', { hint: text });
-
-                if(response.ok) {
-                    input.value = '';
-                    loadMemories(); // Listeyi güncelle
-                }
-            } catch (e) {
-                alert("Hafıza eklenirken bir hata oluştu.");
-            }
-        }
-
-        // 4. Fotoğraf / Görsel Oluşturma
-        async function generateImage() {
-            const promptInput = document.getElementById('imagePrompt');
-            const preview = document.getElementById('imagePreview');
-            if(!promptInput.value.trim()) return alert("Prompt giriniz.");
-
-            preview.innerHTML = `<span class="loading-text">Görsel çiziliyor...</span>`;
-
-            try {
-                const response = await memoFetch('/v1/images', 'POST', { prompt: promptInput.value });
-                if(response.ok) {
-                    const data = await response.json();
-                    // Medya yolu /media/ üzerinden açılır
-                    const fileUrl = `${BASE_URL}/media/${data.filename}`;
-                    preview.innerHTML = `
-                        <img src="${fileUrl}" alt="MEMO AI Image">
-                        <a href="${fileUrl}" download="${data.filename}" class="download-badge" target="_blank">İndir PNG</a>
-                    `;
-                }
-            } catch (e) {
-                preview.innerHTML = `<span style="color:#ff3b30; font-size:12px;">Görsel oluşturulamadı.</span>`;
-            }
-        }
-
-        // 5. Video Oluşturma (MP4)
-        async function generateVideo() {
-            const promptInput = document.getElementById('videoPrompt');
-            const preview = document.getElementById('videoPreview');
-            if(!promptInput.value.trim()) return alert("Prompt giriniz.");
-
-            preview.innerHTML = `<span class="loading-text">Video oluşturuluyor (1 Dk sürebilir)...</span>`;
-
-            try {
-                const response = await memoFetch('/v1/videos', 'POST', { prompt: promptInput.value });
-                if(response.ok) {
-                    const data = await response.json();
-                    const fileUrl = `${BASE_URL}/media/${data.filename}`;
-                    preview.innerHTML = `
-                        <video src="${fileUrl}" controls></video>
-                        <a href="${fileUrl}" download="${data.filename}" class="download-badge" target="_blank">İndir MP4</a>
-                    `;
-                }
-            } catch (e) {
-                preview.innerHTML = `<span style="color:#ff3b30; font-size:12px;">Video oluşturulamadı.</span>`;
-            }
-        }
-
-        // 6. Ses Oluşturma (WAV)
-        async function generateVoice() {
-            const promptInput = document.getElementById('voicePrompt');
-            const preview = document.getElementById('voicePreview');
-            if(!promptInput.value.trim()) return alert("Metin giriniz.");
-
-            preview.innerHTML = `<span class="loading-text">Ses üretiliyor...</span>`;
-
-            try {
-                const response = await memoFetch('/v1/voice', 'POST', { text: promptInput.value });
-                if(response.ok) {
-                    const data = await response.json();
-                    const fileUrl = `${BASE_URL}/media/${data.filename}`;
-                    preview.innerHTML = `
-                        <audio src="${fileUrl}" controls></audio>
-                        <a href="${fileUrl}" download="${data.filename}" class="download-badge" style="top:8px; bottom:auto;" target="_blank">İndir WAV</a>
-                    `;
-                }
-            } catch (e) {
-                preview.innerHTML = `<span style="color:#ff3b30; font-size:12px;">Ses oluşturulamadı.</span>`;
-            }
-        }
-
-        // Periyodik Durum Kontrolü (Her 10 saniyede bir api kontrolü ve hafıza yenileme)
-        setInterval(() => {
-            checkStatusAndIdentity();
-        }, 10000);
-
-        // Sayfa İlk Açıldığında Yüklenecekler
         window.onload = () => {
-            checkStatusAndIdentity();
-            loadMemories();
+            checkStatus();
+            setInterval(checkStatus, 6000); // 6 saniyede bir api durumu denetle
         };
 
-        // --- SAĞ TIK ENGELLEYİCİ GÜVENLİK SİSTEMİ ---
-        document.addEventListener('contextmenu', function(e) {
-            e.preventDefault();
-        }, false);
-
-        // Ekstra Önlem: F12, Ctrl+Shift+I, Ctrl+Shift+J ve Ctrl+U engelleme (Aero Güvenlik Modu)
+        // Gelişmiş Sağ Tık Engelleme Protokolü
+        document.addEventListener('contextmenu', e => e.preventDefault(), false);
         document.addEventListener('keydown', function(e) {
             if (e.keyCode == 123 || 
                 (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || 
